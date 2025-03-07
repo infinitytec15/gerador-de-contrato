@@ -7,9 +7,8 @@ import subprocess
 
 app = Flask(__name__)
 
-# Configuração do caminho do wkhtmltopdf (ajuste conforme necessário)
-WKHTMLTOPDF_PATH = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'  # Exemplo para Windows
-pdfkit_config = pdfkit.configuration(wkhtmltopdf=WKHTMLTOPDF_PATH)
+# Configuração do pdfkit com o wkhtmltopdf embutido
+pdfkit_config = pdfkit.configuration(wkhtmltopdf='/usr/local/bin/wkhtmltopdf')
 
 @app.route('/')
 def index():
