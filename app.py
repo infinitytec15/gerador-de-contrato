@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, send_file
-from docx import Document
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from io import BytesIO
 
 app = Flask(__name__)
 
@@ -26,29 +28,26 @@ def gerar_procuracao():
         'telefone': request.form['telefone']
     }
 
-    # Abrir o template do contrato
-    doc = Document('templates/procuração_template.docx')
+    # Criar um buffer para o PDF
+    buffer = BytesIO()
 
-    # Número de páginas a serem geradas (exemplo: 3 páginas)
-    num_paginas = 3
+    # Criar o PDF
+    pdf = canvas.Canvas(buffer, pagesize=letter)
+    pdf.setFont("Helvetica", 12)
 
-    for _ in range(num_paginas):
-        # Substituir placeholders pelos dados
-        for paragraph in doc.paragraphs:
-            for key, value in dados.items():
-                if f'{{{key}}}' in paragraph.text:
-                    paragraph.text = paragraph.text.replace(f'{{{key}}}', value)
+    # Adicionar os dados ao PDF
+    y = 750  # Posição inicial no eixo Y
+    for key, value in dados.items():
+        pdf.drawString(50, y, f"{key.capitalize()}: {value}")
+        y -= 20  # Move para a próxima linha
 
-        # Adicionar uma quebra de página após cada conjunto de dados
-        if _ < num_paginas - 1:
-            doc.add_page_break()
+    # Finalizar o PDF
+    pdf.showPage()
+    pdf.save()
 
-    # Salvar o contrato gerado
-    output_path = 'procuração_gerada.docx'
-    doc.save(output_path)
-
-    # Enviar o contrato gerado para o usuário
-    return send_file(output_path, as_attachment=True)
+    # Retornar o PDF para o usuário
+    buffer.seek(0)
+    return send_file(buffer, as_attachment=True, download_name='procuração.pdf', mimetype='application/pdf')
 
 if __name__ == '__main__':
     app.run(debug=True)
