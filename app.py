@@ -7,7 +7,7 @@ import subprocess
 
 app = Flask(__name__)
 
-# Configuração do pdfkit com o wkhtmltopdf embutido
+# Configuração do pdfkit com o caminho do wkhtmltopdf
 pdfkit_config = pdfkit.configuration(wkhtmltopdf='/usr/local/bin/wkhtmltopdf')
 
 @app.route('/')
@@ -16,11 +16,6 @@ def index():
 
 @app.route('/gerar_procuracao', methods=['POST'])
 def gerar_procuracao():
-    # Inicializar variáveis temporárias
-    docx_temp_path = None
-    html_temp_path = None
-    pdf_temp_path = None
-
     try:
         # Coletar dados do formulário
         dados = {
@@ -39,7 +34,7 @@ def gerar_procuracao():
             'telefone': request.form['telefone']
         }
 
-        # Abrir o template do contrato DOCX
+        # Abrir o template DOCX
         doc = Document('templates/procuração_template.docx')
 
         # Substituir placeholders pelos dados
@@ -52,10 +47,6 @@ def gerar_procuracao():
         docx_temp_path = 'temp_procuracao.docx'
         doc.save(docx_temp_path)
 
-        # Verificar se o arquivo DOCX foi criado
-        if not os.path.exists(docx_temp_path):
-            raise FileNotFoundError(f"Arquivo {docx_temp_path} não foi criado.")
-
         # Converter o DOCX para HTML usando pandoc
         html_temp_path = 'temp_procuracao.html'
         command = f'pandoc "{docx_temp_path}" -o "{html_temp_path}" --from=docx --to=html'
@@ -65,10 +56,6 @@ def gerar_procuracao():
         if result.returncode != 0:
             raise RuntimeError(f"Erro ao converter DOCX para HTML: {result.stderr}")
 
-        # Verificar se o arquivo HTML foi criado
-        if not os.path.exists(html_temp_path):
-            raise FileNotFoundError(f"Arquivo {html_temp_path} não foi criado.")
-
         # Ler o conteúdo HTML com codificação UTF-8
         with open(html_temp_path, 'r', encoding='utf-8') as f:
             html_content = f.read()
@@ -76,10 +63,6 @@ def gerar_procuracao():
         # Converter o HTML para PDF usando pdfkit
         pdf_temp_path = 'temp_procuracao.pdf'
         pdfkit.from_string(html_content, pdf_temp_path, configuration=pdfkit_config, options={"encoding": "UTF-8"})
-
-        # Verificar se o arquivo PDF foi criado
-        if not os.path.exists(pdf_temp_path):
-            raise FileNotFoundError(f"Arquivo {pdf_temp_path} não foi criado.")
 
         # Ler o PDF gerado
         with open(pdf_temp_path, 'rb') as f:
@@ -98,11 +81,11 @@ def gerar_procuracao():
 
     finally:
         # Remover arquivos temporários
-        if docx_temp_path and os.path.exists(docx_temp_path):
+        if os.path.exists(docx_temp_path):
             os.remove(docx_temp_path)
-        if html_temp_path and os.path.exists(html_temp_path):
+        if os.path.exists(html_temp_path):
             os.remove(html_temp_path)
-        if pdf_temp_path and os.path.exists(pdf_temp_path):
+        if os.path.exists(pdf_temp_path):
             os.remove(pdf_temp_path)
 
 if __name__ == '__main__':
