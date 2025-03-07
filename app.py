@@ -4,11 +4,16 @@ import pdfkit
 from io import BytesIO
 import os
 import subprocess
+import logging
 
 app = Flask(__name__)
 
+# Configurar logs
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 # Configuração do pdfkit com o caminho do wkhtmltopdf
-pdfkit_config = pdfkit.configuration(wkhtmltopdf='/usr/local/bin/wkhtmltopdf')
+pdfkit_config = pdfkit.configuration(wkhtmltopdf='/usr/bin/wkhtmltopdf')
 
 @app.route('/')
 def index():
@@ -34,8 +39,11 @@ def gerar_procuracao():
             'telefone': request.form['telefone']
         }
 
+        logger.debug("Dados do formulário coletados com sucesso.")
+
         # Abrir o template DOCX
         doc = Document('templates/procuração_template.docx')
+        logger.debug("Template DOCX carregado com sucesso.")
 
         # Substituir placeholders pelos dados
         for paragraph in doc.paragraphs:
@@ -46,6 +54,7 @@ def gerar_procuracao():
         # Salvar o DOCX preenchido temporariamente
         docx_temp_path = 'temp_procuracao.docx'
         doc.save(docx_temp_path)
+        logger.debug(f"DOCX preenchido salvo em: {docx_temp_path}")
 
         # Converter o DOCX para HTML usando pandoc
         html_temp_path = 'temp_procuracao.html'
@@ -54,7 +63,10 @@ def gerar_procuracao():
 
         # Verificar se o comando pandoc foi executado com sucesso
         if result.returncode != 0:
+            logger.error(f"Erro ao converter DOCX para HTML: {result.stderr}")
             raise RuntimeError(f"Erro ao converter DOCX para HTML: {result.stderr}")
+
+        logger.debug(f"HTML gerado salvo em: {html_temp_path}")
 
         # Ler o conteúdo HTML com codificação UTF-8
         with open(html_temp_path, 'r', encoding='utf-8') as f:
@@ -63,6 +75,8 @@ def gerar_procuracao():
         # Converter o HTML para PDF usando pdfkit
         pdf_temp_path = 'temp_procuracao.pdf'
         pdfkit.from_string(html_content, pdf_temp_path, configuration=pdfkit_config, options={"encoding": "UTF-8"})
+
+        logger.debug(f"PDF gerado salvo em: {pdf_temp_path}")
 
         # Ler o PDF gerado
         with open(pdf_temp_path, 'rb') as f:
@@ -77,6 +91,7 @@ def gerar_procuracao():
         )
 
     except Exception as e:
+        logger.error(f"Erro ao gerar o PDF: {str(e)}")
         return f"Erro ao gerar o PDF: {str(e)}", 500
 
     finally:
@@ -87,6 +102,7 @@ def gerar_procuracao():
             os.remove(html_temp_path)
         if os.path.exists(pdf_temp_path):
             os.remove(pdf_temp_path)
+        logger.debug("Arquivos temporários removidos.")
 
 if __name__ == '__main__':
     app.run(debug=True)
