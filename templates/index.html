@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Procuração</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        form {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        input, select {
+            flex: 1;
+            padding: 8px;
+            margin-top: 5px;
+        }
+        .error {
+            color: red;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .logo {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo">
+        <img src="https://www.hbn.adv.br/wp-content/themes/hbn/img/hbnadvogados.png" alt="Logo" style="width: 350px; height: 57px;">
+    </div>
+    <h1>Gerador de Procuração</h1>
+    <form id="formProcuracao" action="/gerar_procuracao" method="post">
+        <label for="nome">👤 Nome:</label>
+        <div class="input-group">
+            <input type="text" id="nome" name="nome" required oninput="validarLetras(this)">
+            <div class="error" id="nomeError"></div>
+        </div>
+
+        <label for="apelido">📛 Apelido:</label>
+        <div class="input-group">
+            <input type="text" id="apelido" name="apelido" required oninput="validarLetras(this)">
+            <div class="error" id="apelidoError"></div>
+        </div>
+
+        <label for="nacionalidade">🌍 Nacionalidade:</label>
+        <div class="input-group">
+            <input type="text" id="nacionalidade" name="nacionalidade" required oninput="validarLetras(this)">
+            <div class="error" id="nacionalidadeError"></div>
+        </div>
+
+        <label for="profissao">💼 Profissão:</label>
+        <div class="input-group">
+            <input type="text" id="profissao" name="profissao" required oninput="validarLetras(this)">
+            <div class="error" id="profissaoError"></div>
+        </div>
+
+        <label for="estado_civil">💍 Estado Civil:</label>
+        <div class="input-group">
+            <input type="text" id="estado_civil" name="estado_civil" required oninput="validarLetras(this)">
+            <div class="error" id="estadoCivilError"></div>
+        </div>
+
+        <label for="rg_uf">🆔 RG/UF:</label>
+        <div class="input-group">
+            <input type="text" id="rg_uf" name="rg_uf" required oninput="validarRG(this)">
+            <div class="error" id="rgError"></div>
+        </div>
+
+        <label for="cpf">📄 CPF:</label>
+        <div class="input-group">
+            <input type="text" id="cpf" name="cpf" required>
+            <div class="error" id="cpfError"></div>
+        </div>
+
+        <label for="cep">🏠 CEP:</label>
+        <div class="input-group">
+            <input type="text" id="cep" name="cep" required onblur="consultarCEP(this.value)">
+            <div class="error" id="cepError"></div>
+        </div>
+
+        <label for="rua">🛣️ Rua:</label>
+        <div class="input-group">
+            <input type="text" id="rua" name="rua" required>
+            <div class="error" id="ruaError"></div>
+        </div>
+
+        <label for="numero">🏢 Número:</label>
+        <div class="input-group">
+            <input type="text" id="numero" name="numero" required>
+            <div class="error" id="numeroError"></div>
+        </div>
+
+        <label for="bairro">🏘️ Bairro:</label>
+        <div class="input-group">
+            <input type="text" id="bairro" name="bairro" required>
+            <div class="error" id="bairroError"></div>
+        </div>
+
+        <label for="municipio_uf">🏙️ Município/UF:</label>
+        <div class="input-group">
+            <input type="text" id="municipio_uf" name="municipio_uf" required>
+            <div class="error" id="municipioError"></div>
+        </div>
+
+        <label for="telefone">📞 Telefone:</label>
+        <div class="input-group">
+            <input type="text" id="telefone" name="telefone" required>
+            <div class="error" id="telefoneError"></div>
+        </div>
+
+        <button type="submit">📜 Gerar Procuração</button>
+    </form>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <script>
+        // Máscaras para CPF, CEP e Telefone
+        $(document).ready(function () {
+            $('#cpf').mask('000.000.000-00');
+            $('#cep').mask('00000-000');
+            $('#telefone').mask('(00) 00000-0000');
+        });
+
+        // Função para validar apenas letras
+        function validarLetras(input) {
+            const regex = /^[A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ\s]+$/;
+            const errorId = input.id + 'Error';
+            if (!regex.test(input.value)) {
+                document.getElementById(errorId).innerText = 'Apenas letras são permitidas.';
+                input.setCustomValidity('Apenas letras são permitidas.');
+            } else {
+                document.getElementById(errorId).innerText = '';
+                input.setCustomValidity('');
+            }
+        }
+
+        // Função para validar RG (apenas números)
+        function validarRG(input) {
+            const regex = /^[0-9]+$/;
+            const errorId = input.id + 'Error';
+            if (!regex.test(input.value)) {
+                document.getElementById(errorId).innerText = 'Apenas números são permitidos.';
+                input.setCustomValidity('Apenas números são permitidos.');
+            } else {
+                document.getElementById(errorId).innerText = '';
+                input.setCustomValidity('');
+            }
+        }
+
+        // Função para consultar o CEP usando a API ViaCEP
+        function consultarCEP(cep) {
+            cep = cep.replace(/\D/g, ''); // Remove caracteres não numéricos
+            if (cep.length !== 8) {
+                document.getElementById('cepError').innerText = 'CEP inválido.';
+                return;
+            }
+
+            // Faz a requisição à API ViaCEP
+            fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.erro) {
+                        document.getElementById('cepError').innerText = 'CEP não encontrado.';
+                    } else {
+                        // Preenche os campos com os dados retornados
+                        document.getElementById('rua').value = data.logradouro;
+                        document.getElementById('bairro').value = data.bairro;
+                        document.getElementById('municipio_uf').value = `${data.localidade}/${data.uf}`;
+                        document.getElementById('cepError').innerText = ''; // Limpa a mensagem de erro
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('cepError').innerText = 'Erro ao consultar o CEP.';
+                });
+        }
+
+        // Função para validar CPF
+        function validarCPF(cpf) {
+            cpf = cpf.replace(/\D/g, '');
+            if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+            let soma = 0;
+            for (let i = 0; i < 9; i++) soma += parseInt(cpf.charAt(i)) * (10 - i);
+            let resto = (soma * 10) % 11;
+            if (resto === 10 || resto === 11) resto = 0;
+            if (resto !== parseInt(cpf.charAt(9))) return false;
+            soma = 0;
+            for (let i = 0; i < 10; i++) soma += parseInt(cpf.charAt(i)) * (11 - i);
+            resto = (soma * 10) % 11;
+            if (resto === 10 || resto === 11) resto = 0;
+            if (resto !== parseInt(cpf.charAt(10))) return false;
+            return true;
+        }
+
+        // Validação do CPF ao enviar o formulário
+        document.getElementById('formProcuracao').addEventListener('submit', function (event) {
+            const cpf = document.getElementById('cpf').value;
+            if (!validarCPF(cpf)) {
+                document.getElementById('cpfError').innerText = 'CPF inválido.';
+                event.preventDefault();
+            } else {
+                document.getElementById('cpfError').innerText = '';
+            }
+        });
+    </script>
+</body>
+</html>
